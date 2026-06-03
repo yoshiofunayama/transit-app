@@ -87,7 +87,6 @@
     <div id="month-list"></div>
     <div class="mtotal"><span class="lbl">月の合計</span><span class="v"><span class="yen">¥</span><span id="month-total">0</span></span></div>
     <button class="btn shareall" id="share-all">この月のリストを共有</button>
-    <button class="btn copyall" id="copy-all">コピーする</button>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -165,12 +164,6 @@
     return y+'年'+Number(m)+'月 交通費\n'+lines.join('\n')+'\n合計  ¥'+fmt(sum);
   }
 
-  function copyAll(){
-    const text=buildMonthText();
-    if(!text){toast('記録がありません');return;}
-    copy(text);toast('リストをコピーしました');
-  }
-
   async function shareAll(){
     const text=buildMonthText();
     if(!text){toast('記録がありません');return;}
@@ -212,7 +205,6 @@
     $('prev-m').onclick=()=>shiftMonth(-1);
     $('next-m').onclick=()=>shiftMonth(1);
     $('share-all').onclick=shareAll;
-    $('copy-all').onclick=copyAll;
     renderToday();renderMonth();
   }
   init();
