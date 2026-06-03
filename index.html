@@ -47,6 +47,10 @@
   .row{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-bottom:1px solid var(--line);font-size:16px}
   .row:last-child{border-bottom:none}
   .row .a{font-weight:700;font-variant-numeric:tabular-nums;color:var(--go-d)}
+  .row .ops{display:flex;align-items:center;gap:8px}
+  .mini{font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:#fff;cursor:pointer;font-family:inherit}
+  .mini.edit{color:var(--go-d)}
+  .mini.del{color:#A6453A;border-color:#E3C7C7}
   .row .copy{margin-left:10px;font-size:12px;color:var(--muted);background:none;border:1px solid var(--line);border-radius:8px;padding:4px 8px;cursor:pointer}
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:18px 0}
   .mtotal{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:14px;border-top:2px solid var(--ink)}
@@ -143,11 +147,31 @@
       const amt=state.days[d];sum+=amt;
       const dd=Number(d.slice(8,10)), mm=Number(d.slice(5,7));
       const row=document.createElement('div');row.className='row';
-      row.innerHTML='<span class="d">'+mm+'/'+dd+'</span><span><span class="a">¥'+fmt(amt)+'</span><button class="copy">コピー</button></span>';
-      row.querySelector('.copy').onclick=()=>{copy(String(amt));toast('¥'+fmt(amt)+' をコピー');};
+      row.innerHTML='<span class="d">'+mm+'/'+dd+'</span><span class="ops"><span class="a">¥'+fmt(amt)+'</span><button class="mini edit">編集</button><button class="mini del">削除</button></span>';
+      row.querySelector('.edit').onclick=()=>editDay(d);
+      row.querySelector('.del').onclick=()=>deleteDay(d);
       list.appendChild(row);
     });
     $('month-total').textContent=fmt(sum);
+  }
+
+  function dlabel(d){return Number(d.slice(5,7))+'/'+Number(d.slice(8,10));}
+
+  function editDay(d){
+    const cur=state.days[d];
+    const input=window.prompt(dlabel(d)+' の金額（円）を入力。0で削除します。', String(cur));
+    if(input===null) return;
+    const v=parseInt(input,10);
+    if(isNaN(v)||v<0){toast('数字を入れてください');return;}
+    if(v===0){ delete state.days[d]; } else { state.days[d]=v; }
+    save();renderMonth();
+    toast('更新しました');
+  }
+
+  function deleteDay(d){
+    if(!window.confirm(dlabel(d)+' の記録を削除しますか？')) return;
+    delete state.days[d];save();renderMonth();
+    toast('削除しました');
   }
 
   function copy(text){
@@ -193,7 +217,7 @@
     state.draft=[];save();
     viewMonth=date.slice(0,7);
     renderToday();renderMonth();
-    toast(Number(date.slice(5,7))+'/'+Number(date.slice(8,10))+' に ¥'+fmt(total)+' を保存');
+    toast(dlabel(date)+' を保存（合計 ¥'+fmt(state.days[date])+'）');
   }
 
   function init(){
