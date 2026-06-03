@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>交通費 電卓</title>
+<meta name="theme-color" content="#1D9E75">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="交通費">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap');
+  :root{--paper:#F7F4EC;--ink:#2B2A26;--muted:#8A867B;--line:#E5E0D3;--card:#FFFFFF;
+    --go:#1D9E75;--go-d:#0F6E56;--soft:#EAF4EF}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Zen Maru Gothic',sans-serif}
+  html,body{background:var(--paper);color:var(--ink)}
+  body{padding:calc(18px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));}
+  #ki-wrap{max-width:480px;margin:0 auto}
+  h1{font-size:19px;font-weight:700;letter-spacing:.02em}
+  .sub{font-size:13px;color:var(--muted);margin-top:2px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px}
+  .lbl{font-size:13px;color:var(--muted);font-weight:500}
+  .total{font-size:46px;font-weight:700;color:var(--go-d);line-height:1.1;font-variant-numeric:tabular-nums;margin-top:4px}
+  .yen{font-size:24px;font-weight:500;margin-right:2px}
+  .datebar{display:flex;align-items:center;gap:8px;margin-top:14px}
+  input[type=date]{flex:1;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;min-height:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--soft);color:var(--go-d);
+    font-weight:500;font-size:15px;padding:7px 10px 7px 12px;border-radius:999px;font-variant-numeric:tabular-nums}
+  .chip button{border:none;background:transparent;color:var(--go-d);font-size:17px;line-height:1;cursor:pointer;opacity:.7}
+  .entry{display:flex;gap:10px;margin-top:16px}
+  .entry input{flex:1;font-size:22px;font-weight:500;text-align:right;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-variant-numeric:tabular-nums}
+  .entry input:focus{outline:none;border-color:var(--go)}
+  button.btn{font-family:inherit;font-weight:700;font-size:16px;border:none;border-radius:12px;cursor:pointer;padding:14px 16px}
+  .add{background:var(--soft);color:var(--go-d);white-space:nowrap}
+  .confirm{width:100%;margin-top:14px;background:var(--go);color:#fff;font-size:17px;padding:15px}
+  .confirm:disabled{background:#CFE6DC;color:#fff;cursor:default}
+  .monthnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .monthnav button{border:none;background:var(--soft);color:var(--go-d);width:38px;height:38px;border-radius:10px;font-size:18px;cursor:pointer}
+  .monthnav span{font-size:16px;font-weight:700}
+  .row{display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-bottom:1px solid var(--line);font-size:16px}
+  .row:last-child{border-bottom:none}
+  .row .a{font-weight:700;font-variant-numeric:tabular-nums;color:var(--go-d)}
+  .row .copy{margin-left:10px;font-size:12px;color:var(--muted);background:none;border:1px solid var(--line);border-radius:8px;padding:4px 8px;cursor:pointer}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:18px 0}
+  .mtotal{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:14px;border-top:2px solid var(--ink)}
+  .mtotal .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+  .shareall{width:100%;margin-top:14px;background:var(--ink);color:#fff}
+  .copyall{width:100%;margin-top:8px;background:var(--soft);color:var(--go-d)}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="ki-wrap">
+  <h1>交通費 電卓</h1>
+  <div class="sub">運賃を入れて足すだけ。リストは自動でたまります。</div>
+
+  <div class="card">
+    <div class="lbl">この日の合計</div>
+    <div class="total"><span class="yen">¥</span><span id="today-total">0</span></div>
+    <div class="datebar">
+      <span class="lbl">日付</span>
+      <input type="date" id="date-in">
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="entry">
+      <input type="number" id="fare-in" inputmode="numeric" placeholder="運賃を入力" min="0">
+      <button class="btn add" id="add-btn">＋ 足す</button>
+    </div>
+    <button class="btn confirm" id="confirm-btn" disabled>この日を確定して保存</button>
+  </div>
+
+  <div class="card">
+    <div class="monthnav">
+      <button id="prev-m">‹</button>
+      <span id="month-label"></span>
+      <button id="next-m">›</button>
+    </div>
+    <div id="month-list"></div>
+    <div class="mtotal"><span class="lbl">月の合計</span><span class="v"><span class="yen">¥</span><span id="month-total">0</span></span></div>
+    <button class="btn shareall" id="share-all">この月のリストを共有</button>
+    <button class="btn copyall" id="copy-all">コピーする</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  const KEY='transit:v1';
+  let state={draft:[],days:{}};
+  let mem={draft:[],days:{}};
+  let ok=true;
+  try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){ok=false;}
+
+  function load(){
+    if(ok){ try{const r=localStorage.getItem(KEY); if(r) state=JSON.parse(r);}catch(e){} }
+    else { state=mem; }
+  }
+  function save(){
+    if(ok){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
+    else { mem=state; }
+  }
+
+  const $=id=>document.getElementById(id);
+  const fmt=n=>Number(n).toLocaleString('ja-JP');
+  const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+  let viewMonth=todayStr().slice(0,7);
+
+  function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
+
+  function renderToday(){
+    const total=state.draft.reduce((a,b)=>a+b,0);
+    $('today-total').textContent=fmt(total);
+    const c=$('chips');c.innerHTML='';
+    state.draft.forEach((f,i)=>{
+      const el=document.createElement('span');el.className='chip';
+      el.innerHTML='¥'+fmt(f)+' <button aria-label="削除">×</button>';
+      el.querySelector('button').onclick=()=>{state.draft.splice(i,1);save();renderToday();};
+      c.appendChild(el);
+    });
+    $('confirm-btn').disabled = state.draft.length===0;
+  }
+
+  function monthDays(){
+    return Object.keys(state.days).filter(d=>d.slice(0,7)===viewMonth && state.days[d]>0).sort();
+  }
+  function renderMonth(){
+    const [y,m]=viewMonth.split('-');
+    $('month-label').textContent=y+'年'+Number(m)+'月';
+    const list=$('month-list');list.innerHTML='';
+    const days=monthDays();
+    if(days.length===0){list.innerHTML='<div class="empty">まだ記録がありません</div>';}
+    let sum=0;
+    days.forEach(d=>{
+      const amt=state.days[d];sum+=amt;
+      const dd=Number(d.slice(8,10)), mm=Number(d.slice(5,7));
+      const row=document.createElement('div');row.className='row';
+      row.innerHTML='<span class="d">'+mm+'/'+dd+'</span><span><span class="a">¥'+fmt(amt)+'</span><button class="copy">コピー</button></span>';
+      row.querySelector('.copy').onclick=()=>{copy(String(amt));toast('¥'+fmt(amt)+' をコピー');};
+      list.appendChild(row);
+    });
+    $('month-total').textContent=fmt(sum);
+  }
+
+  function copy(text){
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text);return;} }catch(e){}
+    try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);}catch(e){}
+  }
+
+  function buildMonthText(){
+    const days=monthDays();
+    if(days.length===0) return '';
+    const [y,m]=viewMonth.split('-');
+    let sum=0;
+    const lines=days.map(d=>{const a=state.days[d];sum+=a;return Number(d.slice(5,7))+'/'+Number(d.slice(8,10))+'  ¥'+fmt(a);});
+    return y+'年'+Number(m)+'月 交通費\n'+lines.join('\n')+'\n合計  ¥'+fmt(sum);
+  }
+
+  function copyAll(){
+    const text=buildMonthText();
+    if(!text){toast('記録がありません');return;}
+    copy(text);toast('リストをコピーしました');
+  }
+
+  async function shareAll(){
+    const text=buildMonthText();
+    if(!text){toast('記録がありません');return;}
+    if(navigator.share){
+      try{ await navigator.share({title:'交通費リスト',text}); return; }
+      catch(e){ if(e&&e.name==='AbortError') return; }
+    }
+    copy(text);toast('共有が使えないためコピーしました');
+  }
+
+  function shiftMonth(n){
+    let [y,m]=viewMonth.split('-').map(Number);m+=n;if(m<1){m=12;y--;}if(m>12){m=1;y++;}
+    viewMonth=y+'-'+String(m).padStart(2,'0');renderMonth();
+  }
+
+  function addFare(){
+    const v=parseInt($('fare-in').value,10);
+    if(!v||v<=0){toast('運賃を入れてください');return;}
+    state.draft.push(v);save();$('fare-in').value='';$('fare-in').focus();renderToday();
+  }
+
+  function confirmDay(){
+    const date=$('date-in').value||todayStr();
+    const total=state.draft.reduce((a,b)=>a+b,0);
+    if(total<=0)return;
+    state.days[date]=(state.days[date]||0)+total;
+    state.draft=[];save();
+    viewMonth=date.slice(0,7);
+    renderToday();renderMonth();
+    toast(Number(date.slice(5,7))+'/'+Number(date.slice(8,10))+' に ¥'+fmt(total)+' を保存');
+  }
+
+  function init(){
+    load();
+    $('date-in').value=todayStr();
+    $('add-btn').onclick=addFare;
+    $('fare-in').addEventListener('keydown',e=>{if(e.key==='Enter')addFare();});
+    $('confirm-btn').onclick=confirmDay;
+    $('prev-m').onclick=()=>shiftMonth(-1);
+    $('next-m').onclick=()=>shiftMonth(1);
+    $('share-all').onclick=shareAll;
+    $('copy-all').onclick=copyAll;
+    renderToday();renderMonth();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
