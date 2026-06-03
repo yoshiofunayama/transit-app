@@ -56,6 +56,9 @@
   .mtotal{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:14px;border-top:2px solid var(--ink)}
   .mtotal .v{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
   .shareall{width:100%;margin-top:14px;background:var(--ink);color:#fff}
+  .data-btns{display:flex;gap:10px;margin-top:10px}
+  .data-btn{flex:1;background:var(--soft);color:var(--go-d);font-size:15px;padding:12px}
+  .data-note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
   .copyall{width:100%;margin-top:8px;background:var(--soft);color:var(--go-d)}
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
     background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
@@ -91,6 +94,15 @@
     <div id="month-list"></div>
     <div class="mtotal"><span class="lbl">月の合計</span><span class="v"><span class="yen">¥</span><span id="month-total">0</span></span></div>
     <button class="btn shareall" id="share-all">この月のリストを共有</button>
+  </div>
+
+  <div class="card">
+    <div class="lbl">データの保管（機種変更・引っ越し用）</div>
+    <div class="data-btns">
+      <button class="btn data-btn" id="backup-btn">バックアップ</button>
+      <button class="btn data-btn" id="restore-btn">復元</button>
+    </div>
+    <div class="data-note">「バックアップ」で控えを書き出し、メモやメールに保存。新しい端末では「復元」で貼り戻せます。</div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -153,6 +165,30 @@
       list.appendChild(row);
     });
     $('month-total').textContent=fmt(sum);
+  }
+
+  async function backupData(){
+    const text=JSON.stringify({app:'transit',v:1,days:state.days});
+    if(navigator.share){
+      try{ await navigator.share({title:'交通費バックアップ',text}); return; }
+      catch(e){ if(e&&e.name==='AbortError') return; }
+    }
+    copy(text);toast('バックアップをコピーしました');
+  }
+
+  function restoreData(){
+    const input=window.prompt('バックアップの文字列を貼り付けてください');
+    if(input===null) return;
+    let obj;
+    try{ obj=JSON.parse(input.trim()); }catch(e){ toast('うまく読み取れませんでした');return; }
+    const days=(obj&&obj.days&&typeof obj.days==='object')?obj.days:null;
+    if(!days){ toast('バックアップの形式が違います');return; }
+    const toAdd=Object.keys(days).filter(function(d){return typeof days[d]==='number'&&days[d]>0&&!(d in state.days);});
+    if(toAdd.length===0){ toast('追加する新しいデータはありませんでした');return; }
+    if(!window.confirm(toAdd.length+'件のデータを復元します。よろしいですか？（既存の日はそのまま残ります）')) return;
+    toAdd.forEach(function(d){ state.days[d]=days[d]; });
+    save();renderMonth();
+    toast(toAdd.length+'件を復元しました');
   }
 
   function dlabel(d){return Number(d.slice(5,7))+'/'+Number(d.slice(8,10));}
@@ -230,6 +266,8 @@
     $('prev-m').onclick=()=>shiftMonth(-1);
     $('next-m').onclick=()=>shiftMonth(1);
     $('share-all').onclick=shareAll;
+    $('backup-btn').onclick=backupData;
+    $('restore-btn').onclick=restoreData;
     renderToday();renderMonth();
   }
   init();
