@@ -33,7 +33,9 @@
     font-weight:500;font-size:15px;padding:7px 10px 7px 12px;border-radius:999px;font-variant-numeric:tabular-nums}
   .chip button{border:none;background:transparent;color:var(--go-d);font-size:17px;line-height:1;cursor:pointer;opacity:.7}
   .entry{display:flex;gap:10px;margin-top:16px}
-  .entry input{flex:1;font-size:22px;font-weight:500;text-align:right;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-variant-numeric:tabular-nums}
+  .entry{align-items:stretch}
+  .entry input{flex:1 1 0;min-width:0;font-size:22px;font-weight:500;text-align:right;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-variant-numeric:tabular-nums}
+  .entry .add{flex:0 0 auto}
   .entry input:focus{outline:none;border-color:var(--go)}
   button.btn{font-family:inherit;font-weight:700;font-size:16px;border:none;border-radius:12px;cursor:pointer;padding:14px 16px}
   .add{background:var(--soft);color:var(--go-d);white-space:nowrap}
